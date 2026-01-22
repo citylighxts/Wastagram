@@ -10,7 +10,9 @@ struct MainAppView: View {
             ZStack(alignment: .bottom) {
                 Group {
                     switch selectedTab {
-                    case 0: Text("Home Feed Content").frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 0:
+                        HomeView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 1: Text("Track Pickup Real-time").frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 2: Text("Setor Waste Form").frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 3:

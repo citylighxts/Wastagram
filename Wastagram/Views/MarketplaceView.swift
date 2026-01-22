@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MarketplaceView: View {
     @State private var searchText = ""
+    @State private var selectedCategory = "All"
     
     let products: [ProductItem] = [
         ProductItem(name: "Bamboo Toothbrush", image: "toothbrush", points: 150),
@@ -22,9 +23,8 @@ struct MarketplaceView: View {
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Marketplace")
-                        .font(.largeTitle)
+                        .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.darkGreen)
                     
                     Text("Find sustainable swaps")
                         .font(.subheadline)
@@ -37,7 +37,6 @@ struct MarketplaceView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
-                    
                     TextField("Search eco products", text: $searchText)
                 }
                 .padding()
@@ -45,7 +44,45 @@ struct MarketplaceView: View {
                 .cornerRadius(15)
                 .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
                 .padding(.horizontal)
-                .padding(.vertical, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 15)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        Button(action: { selectedCategory = "All" }) {
+                            HStack {
+                                Image(systemName: "line.3.horizontal.decrease")
+                                Text("All")
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 25)
+                            .background(selectedCategory == "All" ? Color.brandGreen : Color.white)
+                            .foregroundColor(selectedCategory == "All" ? .white : .black)
+                            .cornerRadius(30)
+                            // Add border if inactive
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: selectedCategory == "All" ? 0 : 1)
+                            )
+                        }
+                        
+                        // Other Categories
+                        FilterChip(icon: "leaf", title: "Compost", selected: $selectedCategory)
+                        FilterChip(icon: "tshirt", title: "Fashion", selected: $selectedCategory)
+                        FilterChip(icon: "lightbulb", title: "Home", selected: $selectedCategory)
+                        FilterChip(icon: "fork.knife", title: "Kitchen", selected: $selectedCategory)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                }
+                
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Eco Picks")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.bottom, 20)
                 
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 20) {
@@ -63,6 +100,36 @@ struct MarketplaceView: View {
     }
 }
 
+struct FilterChip: View {
+    let icon: String
+    let title: String
+    @Binding var selected: String
+    
+    var isSelected: Bool {
+        selected == title
+    }
+    
+    var body: some View {
+        Button(action: { selected = title }) {
+            HStack {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 20)
+            .background(isSelected ? Color.brandGreen : Color.white)
+            .foregroundColor(isSelected ? .white : .black)
+            .cornerRadius(30)
+            .overlay(
+                RoundedRectangle(cornerRadius: 30)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: isSelected ? 0 : 1)
+            )
+        }
+    }
+}
+
 struct ProductCard: View {
     let product: ProductItem
     
@@ -70,7 +137,6 @@ struct ProductCard: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
                 Color.gray.opacity(0.1)
-                
                 Image(systemName: product.image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
