@@ -4,20 +4,18 @@ struct MainAppView: View {
     @Binding var appState: ContentView.AppState
     @State private var selectedTab = 0
     
+    @State private var showChatbot = false
+    
     var body: some View {
         VStack(spacing: 0) {
             topBar
             ZStack(alignment: .bottom) {
                 Group {
                     switch selectedTab {
-                    case 0:
-                        HomeView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 0: HomeView().frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 1: Text("Track Pickup Real-time").frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 2: Text("Setor Waste Form").frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 3:
-                        MarketplaceView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 2: SetorView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 3: MarketplaceView().frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 4: profileTab
                     default: Text("Home")
                     }
@@ -26,9 +24,14 @@ struct MainAppView: View {
                 .background(Color(.systemGray6))
 
                 customNavBar
+                
+                chatbotButton
             }
         }
         .ignoresSafeArea(.all, edges: .bottom)
+        .sheet(isPresented: $showChatbot) {
+            ChatbotView()
+        }
     }
     
     var topBar: some View {
@@ -69,6 +72,34 @@ struct MainAppView: View {
             .clipShape(RoundedCorner(radius: 25, corners: [.topLeft, .topRight]))
             .ignoresSafeArea(edges: .bottom)
         )
+    }
+    
+    var chatbotButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button(action: {
+                    showChatbot = true
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 50, height: 50)
+                            .overlay(
+                                Circle().stroke(Color(hex: "2CAB02"), lineWidth: 3)
+                            )
+                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(Color(hex: "2CAB02"))
+                    }
+                }
+                .padding(.trailing, 25)
+                .padding(.bottom, 95)
+            }
+        }
     }
     
     var profileTab: some View {
