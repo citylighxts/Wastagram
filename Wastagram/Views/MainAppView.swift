@@ -13,7 +13,9 @@ struct MainAppView: View {
                     case 0: Text("Home Feed Content").frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 1: Text("Track Pickup Real-time").frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 2: Text("Setor Waste Form").frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 3: Text("Eco Marketplace").frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 3:
+                        MarketplaceView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 4: profileTab
                     default: Text("Home")
                     }
@@ -76,5 +78,11 @@ struct MainAppView: View {
             .foregroundColor(.red)
             .padding()
         }
+    }
+}
+
+struct MainAppView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainAppView(appState: .constant(.main))
     }
 }
