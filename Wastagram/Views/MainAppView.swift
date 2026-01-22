@@ -97,7 +97,7 @@ struct MainAppView: View {
                     }
                 }
                 .padding(.trailing, 25)
-                .padding(.bottom, 95)
+                .padding(.bottom, 125)
             }
         }
     }
