@@ -8,7 +8,7 @@ struct ChatbotView: View {
         ChatMessage(text: "Halo! Saya WastaBot. Tanya saya apa saja tentang pengolahan sampah, daur ulang, atau cara memilah sampah!", isUser: false)
     ]
     
-    let apiKey = "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"
+    let apiKey = ""
     let endpointUrl = "https://openrouter.ai/api/v1/chat/completions"
 
     var body: some View {
@@ -102,11 +102,9 @@ struct ChatbotView: View {
         let currentModel = "deepseek/deepseek-r1-0528:free"
         
         let systemPrompt = """
-        Kamu adalah WastaBot, ahli pengelolaan sampah untuk aplikasi Wastagram.
-        Tugasmu:
-        1. Edukasi user tentang daur ulang.
-        2. Bantu hitung estimasi harga sampah jika diminta.
-        3. Jawab dalam Bahasa Indonesia yang ramah, ringkas, dan jelas.
+        Kamu adalah WastaBot, asisten AI aplikasi Wastagram.
+        Jawablah pertanyaan seputar sampah dan daur ulang dalam Bahasa Indonesia.
+        Format jawabanmu menggunakan Markdown sederhana (bold, italic) agar mudah dibaca di HP.
         """
         
         let parameters: [String: Any] = [
@@ -136,7 +134,7 @@ struct ChatbotView: View {
                 self.isLoading = false
                 
                 if let error = error {
-                    self.messages.append(ChatMessage(text: "Koneksi Error: \(error.localizedDescription)", isUser: false))
+                    self.messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
                     return
                 }
                 
@@ -144,6 +142,7 @@ struct ChatbotView: View {
                 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        
                         if let errorObj = json["error"] as? [String: Any],
                            let message = errorObj["message"] as? String {
                             self.messages.append(ChatMessage(text: "API Error: \(message)", isUser: false))
@@ -174,7 +173,9 @@ struct ChatbotView: View {
             let rangeToRemove = rangeStart.lowerBound..<rangeEnd.upperBound
             var newText = text
             newText.removeSubrange(rangeToRemove)
-            return newText.trimmingCharacters(in: .whitespacesAndNewlines)
+            return newText
+                .replacingOccurrences(of: "</think>", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         }
         return text
     }
@@ -195,7 +196,7 @@ struct ChatBubble: View {
                 }
             }
             
-            Text(message.text)
+            Text(LocalizedStringKey(message.text))
                 .padding()
                 .background(message.isUser ? Color(hex: "2DAD02") : Color(.systemGray6))
                 .foregroundColor(message.isUser ? .white : .black)
