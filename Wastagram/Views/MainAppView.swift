@@ -13,7 +13,7 @@ struct MainAppView: View {
                 Group {
                     switch selectedTab {
                     case 0: HomeView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 1: Text("Track Pickup Real-time").frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 1: TrackView().frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 2: SetorView().frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 3: MarketplaceView().frame(maxWidth: .infinity, maxHeight: .infinity)
                     case 4: profileTab
@@ -39,18 +39,24 @@ struct MainAppView: View {
             Text("Wastagram")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(.darkGreen)
+                .foregroundColor(.white)
             Spacer()
             Button(action: { selectedTab = 4 }) {
                 Image(systemName: "person.crop.circle.fill")
                     .font(.title)
-                    .foregroundColor(.brandGreen)
+                    .foregroundColor(.white)
             }
         }
         .padding(.bottom)
         .padding(.horizontal)
-        .background(Color.white)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 5)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [.brandGreen, .darkGreen]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .shadow(color: .black.opacity(0.15), radius: 5, x: 0, y: 5)
     }
 
     var customNavBar: some View {

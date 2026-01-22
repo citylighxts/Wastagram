@@ -59,14 +59,12 @@ struct MarketplaceView: View {
                             .background(selectedCategory == "All" ? Color.brandGreen : Color.white)
                             .foregroundColor(selectedCategory == "All" ? .white : .black)
                             .cornerRadius(30)
-                            // Add border if inactive
                             .overlay(
                                 RoundedRectangle(cornerRadius: 30)
                                     .stroke(Color.gray.opacity(0.3), lineWidth: selectedCategory == "All" ? 0 : 1)
                             )
                         }
                         
-                        // Other Categories
                         FilterChip(icon: "leaf", title: "Compost", selected: $selectedCategory)
                         FilterChip(icon: "tshirt", title: "Fashion", selected: $selectedCategory)
                         FilterChip(icon: "lightbulb", title: "Home", selected: $selectedCategory)
