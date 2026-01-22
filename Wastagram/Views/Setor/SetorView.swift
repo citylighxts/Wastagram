@@ -98,7 +98,7 @@ struct SetorView: View {
                                 .shadow(radius: 5)
                         }
                         .padding(.horizontal)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 100)
                     }
                     .background(Color.white)
                 }
