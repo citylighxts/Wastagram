@@ -8,7 +8,7 @@ struct TrackView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isExpanded = false
     
-    let collapsedHeight: CGFloat = 260
+    let collapsedHeight: CGFloat = 215
     let expandedHeight: CGFloat = 500
     
     var body: some View {

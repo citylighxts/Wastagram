@@ -3,19 +3,18 @@ import SwiftUI
 struct MainAppView: View {
     @Binding var appState: ContentView.AppState
     @State private var selectedTab = 0
-    
     @State private var showChatbot = false
-    
+    @State private var chatbotPosition: CGPoint? = nil
+
     var body: some View {
-        VStack(spacing: 0) {
-            topBar
+        GeometryReader { geometry in
             ZStack(alignment: .bottom) {
                 Group {
                     switch selectedTab {
-                    case 0: HomeView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 1: TrackView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 2: SetorView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case 3: MarketplaceView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                    case 0: HomeView()
+                    case 1: TrackView()
+                    case 2: SetorView()
+                    case 3: MarketplaceView()
                     case 4: profileTab
                     default: Text("Home")
                     }
@@ -23,10 +22,20 @@ struct MainAppView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(.systemGray6))
 
-                customNavBar
+                VStack {
+                    topBar
+                    Spacer()
+                }
                 
-                chatbotButton
+                VStack {
+                    Spacer()
+                    customNavBar
+                }
+                
+                chatbotButton(geometry: geometry)
             }
+            .ignoresSafeArea(.keyboard)
+            .coordinateSpace(name: "screenArea")
         }
         .ignoresSafeArea(.all, edges: .bottom)
         .sheet(isPresented: $showChatbot) {
@@ -76,36 +85,38 @@ struct MainAppView: View {
                 endPoint: .trailing
             )
             .clipShape(RoundedCorner(radius: 25, corners: [.topLeft, .topRight]))
-            .ignoresSafeArea(edges: .bottom)
         )
     }
     
-    var chatbotButton: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Button(action: {
-                    showChatbot = true
-                }) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 50, height: 50)
-                            .overlay(
-                                Circle().stroke(Color(hex: "2CAB02"), lineWidth: 3)
-                            )
-                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                        
-                        Image(systemName: "bubble.left.and.bubble.right.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(Color(hex: "2CAB02"))
-                    }
-                }
-                .padding(.trailing, 25)
-                .padding(.bottom, 125)
+    func chatbotButton(geometry: GeometryProxy) -> some View {
+        Button(action: {
+            showChatbot = true
+        }) {
+            ZStack {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 55, height: 55)
+                    .overlay(
+                        Circle().stroke(Color(hex: "2CAB02"), lineWidth: 3)
+                    )
+                    .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 3)
+                
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(Color(hex: "2CAB02"))
             }
         }
+        .position(
+            x: chatbotPosition?.x ?? geometry.size.width - 50,
+            y: chatbotPosition?.y ?? geometry.size.height - 150
+        )
+        .gesture(
+            DragGesture(coordinateSpace: .named("screenArea"))
+                .onChanged { value in
+                    self.chatbotPosition = value.location
+                }
+        )
+        .animation(.interactiveSpring(), value: chatbotPosition)
     }
     
     var profileTab: some View {
