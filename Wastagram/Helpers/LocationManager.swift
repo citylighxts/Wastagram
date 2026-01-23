@@ -3,7 +3,14 @@ import CoreLocation
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     var locationManager: CLLocationManager?
-    @Published var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+    
+    // 1. TAMBAHKAN INI: Variabel untuk menyimpan koordinat user
+    @Published var userLocation: CLLocationCoordinate2D? = nil
+    
+    @Published var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
+        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    )
     @Published var userAddress: String?
     
     func checkIfLocationServicesIsEnabled() {
@@ -14,7 +21,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    func requestLocation() { locationManager?.requestLocation() }
+    func requestLocation() {
+        locationManager?.requestLocation()
+    }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if locationManager?.authorizationStatus == .authorizedWhenInUse {
@@ -26,13 +35,22 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        
         DispatchQueue.main.async {
-            self.region = MKCoordinateRegion(center: location.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))
+            // 2. UPDATE DI SINI: Simpan koordinat ke variabel userLocation
+            self.userLocation = location.coordinate
+            
+            self.region = MKCoordinateRegion(
+                center: location.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+            )
             self.getAddressFromLatLon(pdblLatitude: location.coordinate.latitude, withLongitude: location.coordinate.longitude)
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) { print(error.localizedDescription) }
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location Error: \(error.localizedDescription)")
+    }
     
     func getAddressFromLatLon(pdblLatitude: Double, withLongitude: Double) {
         let ceo = CLGeocoder()

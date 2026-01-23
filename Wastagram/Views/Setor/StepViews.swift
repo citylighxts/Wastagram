@@ -118,3 +118,132 @@ struct Step5ScheduleView: View {
         }
     }
 }
+
+struct Step6RecommendationView: View {
+    let userLocation: CLLocationCoordinate2D?
+    let wasteType: WasteType
+    let wasteWeight: Double
+    @Binding var selectedBank: BankSampahModel?
+    
+    @State private var recommendations: [BankSampahModel] = []
+    @State private var isLoading = true
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            // Header
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Pilih Mitra Pengepul")
+                    .font(.title2)
+                    .bold()
+                    .foregroundColor(.darkGreen)
+                
+                Text("Rekomendasi terbaik berdasarkan lokasi & jenis sampah Anda.")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(.horizontal)
+            
+            // Logic Tampilan
+            if isLoading {
+                // UPDATE: Menggunakan maxHeight: .infinity agar mengisi layar
+                // dan Spacer() akan mendorong konten ke tengah
+                VStack {
+                    Spacer()
+                    ProgressView("Menganalisa data...")
+                        .progressViewStyle(CircularProgressViewStyle(tint: .brandGreen))
+                        .scaleEffect(1.2)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else if recommendations.isEmpty {
+                // Tampilan Kosong (juga di-tengahin)
+                VStack {
+                    Spacer()
+                    Image(systemName: "slash.circle")
+                        .font(.largeTitle)
+                        .foregroundColor(.gray)
+                    Text("Tidak ditemukan mitra di area Anda.")
+                        .foregroundColor(.gray)
+                        .padding(.top, 5)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+            } else {
+                // Tampilan List Hasil
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(recommendations) { bank in
+                            BankSampahCard(bank: bank, isSelected: selectedBank?.id == bank.id)
+                                .onTapGesture {
+                                    withAnimation {
+                                        selectedBank = bank
+                                    }
+                                }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 120) // Ruang untuk tombol sticky bawah
+                }
+            }
+        }
+        // PENTING: Memastikan View utama mengisi seluruh layar
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .onAppear {
+            loadData()
+        }
+    }
+    
+    func loadData() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { // Tambah durasi sedikit agar terlihat
+            self.recommendations = RecommendationService.shared.getRecommendations(
+                userLocation: userLocation,
+                wasteType: wasteType,
+                weight: wasteWeight
+            )
+            self.isLoading = false
+            
+            if selectedBank == nil {
+                selectedBank = self.recommendations.first
+            }
+        }
+    }
+}
+
+struct BankSampahCard: View {
+    let bank: BankSampahModel
+    let isSelected: Bool
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(bank.name)
+                    .font(.headline)
+                    .foregroundColor(isSelected ? .brandGreen : .black)
+                
+                Text(bank.address)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .lineLimit(1)
+                
+                HStack(spacing: 12) {
+                    Label(String(format: "%.1f", bank.rating), systemImage: "star.fill")
+                        .font(.caption).foregroundColor(.orange)
+                }
+            }
+            Spacer()
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.title2)
+                .foregroundColor(isSelected ? .brandGreen : .gray.opacity(0.5))
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.brandGreen : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+        )
+        .shadow(color: Color.black.opacity(0.05), radius: 5, y: 2)
+    }
+}
