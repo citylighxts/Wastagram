@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import CoreML
 
-// MARK: - 1. Update Data Model (Menyesuaikan kebutuhan ML)
+// MARK: - 1. Data Model
 struct BankSampahModel: Identifiable, Equatable {
     let id = UUID()
     let name: String
@@ -12,16 +12,16 @@ struct BankSampahModel: Identifiable, Equatable {
     let acceptsUserWaste: Bool
     
     // Properti Tambahan untuk ML Features
-    let operationalHours: Double // Durasi buka (contoh: 8.0 jam)
-    let operationalDays: Double // Jumlah hari buka (contoh: 5.0 hari)
-    let capacityKg: Double // Kapasitas harian
+    let operationalHours: Double
+    let operationalDays: Double
+    let capacityKg: Double
     
-    // Harga per kategori (Sesuai PDF Harga Sampah)
+    // Harga per kategori
     let pricePlastik: Double
     let priceKertas: Double
     let priceLogam: Double
     
-    // Kemampuan menerima jenis sampah spesifik
+    // Kemampuan menerima jenis sampah
     let acceptsPlastik: Bool
     let acceptsKertas: Bool
     let acceptsLogam: Bool
@@ -36,11 +36,11 @@ struct BankSampahModel: Identifiable, Equatable {
     }
 }
 
-// MARK: - 2. Recommendation Service Updated
+// MARK: - 2. Recommendation Service (FIXED FOR PROTOTYPE)
 class RecommendationService {
     static let shared = RecommendationService()
     
-    // Mock Data: Diisi nilai realistis berdasarkan PDF & Testing.ipynb
+    // Mock Data (Data Dummy Prototype)
     private let allBanks = [
         BankSampahModel(
             name: "Bank Sampah Induk Surabaya",
@@ -48,12 +48,8 @@ class RecommendationService {
             coordinate: CLLocationCoordinate2D(latitude: -7.29, longitude: 112.74),
             rating: 4.8,
             acceptsUserWaste: true,
-            operationalHours: 8.0,
-            operationalDays: 6.0,
-            capacityKg: 1000.0,
-            pricePlastik: 3000.0, // Rata-rata dari PDF (Botol, Gelas)
-            priceKertas: 1000.0,  // Rata-rata dari PDF (Koran, Kardus)
-            priceLogam: 3500.0,   // Rata-rata dari PDF (Besi, Seng)
+            operationalHours: 8.0, operationalDays: 6.0, capacityKg: 1000.0,
+            pricePlastik: 3700.0, priceKertas: 1400.0, priceLogam: 3400.0,
             acceptsPlastik: true, acceptsKertas: true, acceptsLogam: true,
             acceptsKaca: false, acceptsElektronik: false, acceptsOrganik: true
         ),
@@ -63,12 +59,8 @@ class RecommendationService {
             coordinate: CLLocationCoordinate2D(latitude: -7.33, longitude: 112.78),
             rating: 4.5,
             acceptsUserWaste: true,
-            operationalHours: 6.0,
-            operationalDays: 5.0,
-            capacityKg: 500.0,
-            pricePlastik: 2500.0,
-            priceKertas: 800.0,
-            priceLogam: 3000.0,
+            operationalHours: 6.0, operationalDays: 5.0, capacityKg: 500.0,
+            pricePlastik: 2900.0, priceKertas: 1200.0, priceLogam: 3000.0,
             acceptsPlastik: true, acceptsKertas: true, acceptsLogam: true,
             acceptsKaca: false, acceptsElektronik: false, acceptsOrganik: false
         ),
@@ -78,63 +70,62 @@ class RecommendationService {
             coordinate: CLLocationCoordinate2D(latitude: -7.31, longitude: 112.72),
             rating: 4.2,
             acceptsUserWaste: true,
-            operationalHours: 7.0,
-            operationalDays: 6.0,
-            capacityKg: 300.0,
-            pricePlastik: 2800.0,
-            priceKertas: 900.0,
-            priceLogam: 0.0, // Tidak terima logam
+            operationalHours: 7.0, operationalDays: 6.0, capacityKg: 300.0,
+            pricePlastik: 3000.0, priceKertas: 1000.0, priceLogam: 0.0,
             acceptsPlastik: true, acceptsKertas: true, acceptsLogam: false,
             acceptsKaca: true, acceptsElektronik: false, acceptsOrganik: false
+        ),
+        BankSampahModel(
+            name: "Bank Sampah Sejahtera",
+            address: "Jl. Kenjeran",
+            coordinate: CLLocationCoordinate2D(latitude: -7.25, longitude: 112.76),
+            rating: 3.9,
+            acceptsUserWaste: false, // Case: Tidak terima sampah
+            operationalHours: 5.0, operationalDays: 5.0, capacityKg: 200.0,
+            pricePlastik: 2000.0, priceKertas: 500.0, priceLogam: 2000.0,
+            acceptsPlastik: true, acceptsKertas: true, acceptsLogam: true,
+            acceptsKaca: false, acceptsElektronik: false, acceptsOrganik: false
         )
     ]
     
     func getRecommendations(userLocation: CLLocationCoordinate2D?, wasteType: WasteType, weight: Double) -> [BankSampahModel] {
-        guard let userLoc = userLocation else { return [] }
+        
+        let defaultLocation = CLLocationCoordinate2D(latitude: -7.2575, longitude: 112.7521)
+        let userLoc = userLocation ?? defaultLocation
         
         var scoredBanks: [BankSampahModel] = []
         
-        // Load Model
+        // Load Model (Try/Catch agar aman)
         let model = try? BankSampahRecommender(configuration: MLModelConfiguration())
         
         for var bank in allBanks {
+            // Filter 1: Apakah bank menerima sampah dari user?
             if !bank.acceptsUserWaste { continue }
             
-            // --- Feature Engineering (Logic Python diterjemahkan ke Swift) ---
-            
-            // 1. Jarak & Distance Score (Exp Decay)
+            // Feature Engineering
             let bankLoc = CLLocation(latitude: bank.coordinate.latitude, longitude: bank.coordinate.longitude)
             let myLoc = CLLocation(latitude: userLoc.latitude, longitude: userLoc.longitude)
             let distanceKm = myLoc.distance(from: bankLoc) / 1000.0
             
-            // Rumus: np.exp(-jarak_km / 10)
+            // Logic tambahan untuk ML Input
             let distanceScore = exp(-distanceKm / 10.0)
-            
-            // 2. Price Features
             let prices = [bank.pricePlastik, bank.priceKertas, bank.priceLogam].filter { $0 > 0 }
             let avgPrice = prices.isEmpty ? 0.0 : prices.reduce(0, +) / Double(prices.count)
             let maxPrice = prices.max() ?? 0.0
             let offersPricing = prices.isEmpty ? 0.0 : 1.0
-            
-            // 3. Operational Logic
-            // Asumsi sederhana: Buka (1.0) untuk MVP. Nanti bisa pakai Date()
-            let bukaSekarangBinary = 1.0
-            
-            // 4. Waste Types Count
             let wasteTypesCount = [bank.acceptsPlastik, bank.acceptsKertas, bank.acceptsLogam, bank.acceptsKaca, bank.acceptsElektronik, bank.acceptsOrganik].filter { $0 }.count
             
             var finalScore: Double = 0.0
             var usedML = false
             
-            // --- CORE ML PREDICTION ---
+            // Core ML Prediction
             if let mlModel = model {
                 do {
-                    // INPUT HARUS LENGKAP sesuai Error Message
                     let input = BankSampahRecommenderInput(
                         jarak_km: distanceKm,
                         distance_score: distanceScore,
                         rating: bank.rating,
-                        buka_sekarang_binary: bukaSekarangBinary,
+                        buka_sekarang_binary: 1.0, // Asumsi buka
                         operational_hours: bank.operationalHours,
                         num_operational_days: bank.operationalDays,
                         
@@ -158,8 +149,6 @@ class RecommendationService {
                     
                     let output = try mlModel.prediction(input: input)
                     
-                    // Ganti 'target' dengan nama output yg benar di .mlmodel (bisa 'score', 'identity', atau 'recommendation_score')
-                    // Cek di Xcode: BankSampahRecommender > Predictions > Output
                     finalScore = output.recommendation_score
                     usedML = true
                 } catch {
@@ -167,7 +156,7 @@ class RecommendationService {
                 }
             }
             
-            // Fallback jika ML gagal
+            // Fallback Logic
             if !usedML {
                 finalScore = (bank.rating * 20) + (avgPrice / 500) - (distanceKm * 5)
             }
@@ -176,6 +165,7 @@ class RecommendationService {
             scoredBanks.append(bank)
         }
         
+        // Urutkan score tertinggi
         return scoredBanks.sorted { $0.predictedScore > $1.predictedScore }
     }
 }
